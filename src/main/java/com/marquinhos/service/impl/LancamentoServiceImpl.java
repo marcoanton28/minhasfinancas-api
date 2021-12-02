@@ -10,8 +10,11 @@ import java.util.Optional;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.marquinhos.exception.RegraNegocioException;
 import com.marquinhos.model.entity.Lancamento;
@@ -19,6 +22,7 @@ import com.marquinhos.model.enums.StatusLancamento;
 import com.marquinhos.model.enums.TipoLancamento;
 import com.marquinhos.model.repository.LancamentoRepository;
 import com.marquinhos.service.LancamentoService;
+
 
 @Service
 public class LancamentoServiceImpl implements LancamentoService {
@@ -28,7 +32,8 @@ public class LancamentoServiceImpl implements LancamentoService {
 	public LancamentoServiceImpl(LancamentoRepository repository) {
 		this.repository = repository;
 	}
-
+	
+	
 	@Override
 	@Transactional
 	public Lancamento salvar(Lancamento lancamento) {
@@ -56,7 +61,9 @@ public class LancamentoServiceImpl implements LancamentoService {
 	@Transactional(readOnly = true)
 	public List<Lancamento> buscar(Lancamento lancamentoFiltro) {
 		Example example = Example.of(lancamentoFiltro,
-				ExampleMatcher.matching().withIgnoreCase().withStringMatcher(StringMatcher.CONTAINING));
+				ExampleMatcher.matching()
+				.withIgnoreCase()
+				.withStringMatcher(StringMatcher.CONTAINING));
 		return repository.findAll(example);
 	}
 
@@ -77,7 +84,7 @@ public class LancamentoServiceImpl implements LancamentoService {
 		if (lancamento.getAno() == null || lancamento.getAno().toString().length() != 4) {
 			throw new RegraNegocioException("Informe um ano válido.");
 		}
-		if (lancamento.getUsuario().getId() == null) {
+		if (lancamento.getUsuario()==null||lancamento.getUsuario().getId() == null) {
 			throw new RegraNegocioException("Informe um usuário..");
 		}
 
@@ -99,8 +106,8 @@ public class LancamentoServiceImpl implements LancamentoService {
 	@Transactional(readOnly = true)
 	public BigDecimal obterSaldoPorUsuario(Long id) {
 		
-		BigDecimal receitas = repository.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.RECEITA);
-		BigDecimal despesas = repository.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.DESPESA);
+		BigDecimal receitas = repository.obterSaldoPorTipoLancamentoEUsuarioEStatus(id, TipoLancamento.RECEITA, StatusLancamento.EFETIVADO);
+		BigDecimal despesas = repository.obterSaldoPorTipoLancamentoEUsuarioEStatus(id, TipoLancamento.DESPESA, StatusLancamento.EFETIVADO );
 		if (receitas == null) {
 			receitas = BigDecimal.ZERO;
 		}
